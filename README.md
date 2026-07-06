@@ -88,7 +88,3 @@ Anda dapat masuk ke dalam aplikasi menggunakan akun default administrator:
 5. Masuk ke menu **Prediksi** dan lakukan Prediksi Naive Bayes.
 6. Lihat hasil perhitungan algoritma secara lengkap di menu **Laporan**.
 7. Sesuaikan identitas sekolah (Logo, Lembaga, dsb) melalui menu Profil (Pojok kanan atas -> **Settings**).
-
-## 📄 Lisensi
-
-Aplikasi SIMPATIK merupakan *open-source software* yang dilisensikan di bawah [MIT license](https://opensource.org/licenses/MIT).
