@@ -27,6 +27,9 @@
                     <flux:sidebar.item icon="academic-cap" :href="route('siswa.index')" :current="request()->routeIs('siswa.*')" wire:navigate>
                         {{ __('Siswa') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('kategori-nilai-harian.index')" :current="request()->routeIs('kategori-nilai-harian.*')" wire:navigate>
+                        {{ __('Kategori Nilai Harian') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="clipboard-document-check" :href="route('nilai.index')" :current="request()->routeIs('nilai.*')" wire:navigate>
                         {{ __('Nilai') }}
                     </flux:sidebar.item>

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\KategoriNilaiHarian;
 use App\Models\MataPelajaran;
 use App\Models\NilaiHarian;
 use App\Models\NilaiMapel;
@@ -17,23 +18,33 @@ class NilaiSeeder extends Seeder
     {
         $siswas = Siswa::all();
         $mapels = MataPelajaran::all();
+        $kategoriList = KategoriNilaiHarian::all();
 
         foreach ($siswas as $siswa) {
-            // Seed Nilai Harian (1 per siswa)
-            NilaiHarian::create([
-                'siswa_id' => $siswa->id,
-                'pengetahuan' => rand(70, 95),
-                'keterampilan' => rand(70, 95),
-                'sikap' => rand(70, 95),
-            ]);
+            // Seed Nilai Harian untuk setiap kategori harian
+            foreach ($kategoriList as $cat) {
+                NilaiHarian::updateOrCreate(
+                    [
+                        'siswa_id' => $siswa->id,
+                        'kategori_nilai_harian_id' => $cat->id,
+                    ],
+                    [
+                        'nilai' => rand(70, 98),
+                    ]
+                );
+            }
 
             // Seed Nilai Mapel (per mapel per siswa)
             foreach ($mapels as $mapel) {
-                NilaiMapel::create([
-                    'siswa_id' => $siswa->id,
-                    'mapel_id' => $mapel->id,
-                    'nilai' => rand(70, 100),
-                ]);
+                NilaiMapel::updateOrCreate(
+                    [
+                        'siswa_id' => $siswa->id,
+                        'mapel_id' => $mapel->id,
+                    ],
+                    [
+                        'nilai' => rand(70, 100),
+                    ]
+                );
             }
         }
     }

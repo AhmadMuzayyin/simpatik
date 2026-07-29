@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('mapel_id')->constrained('mata_pelajarans')->cascadeOnDelete();
             $table->float('nilai')->default(0);
             $table->timestamps();
-            
+
             // Unik per siswa per mapel
             $table->unique(['siswa_id', 'mapel_id']);
         });

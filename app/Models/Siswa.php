@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Siswa extends Model
 {
@@ -26,9 +25,9 @@ class Siswa extends Model
         return $this->hasMany(NilaiMapel::class);
     }
 
-    public function nilaiHarian(): HasOne
+    public function nilaiHarians(): HasMany
     {
-        return $this->hasOne(NilaiHarian::class);
+        return $this->hasMany(NilaiHarian::class);
     }
 
     public function preprocessing()

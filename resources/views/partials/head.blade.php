@@ -4,14 +4,14 @@
 @php
     $setting = \App\Models\Setting::first();
     $appName = $setting && $setting->app_name ? $setting->app_name : config('app.name', 'Laravel');
-    $favicon = $setting && $setting->favicon ? Storage::url($setting->favicon) : '/favicon.ico';
+    $favicon = $setting && $setting->favicon ? Storage::url($setting->favicon) : null;
 @endphp
 
 <title>
     {{ filled($title ?? null) ? $title.' - '.$appName : $appName }}
 </title>
 
-@if($setting->favicon)
+@if($favicon)
     <link rel="icon" href="{{ $favicon }}" sizes="any">
 @else
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">

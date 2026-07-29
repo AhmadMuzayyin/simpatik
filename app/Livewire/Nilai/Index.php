@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Nilai;
 
+use App\Models\KategoriNilaiHarian;
 use App\Models\Kelas;
 use App\Models\MataPelajaran;
 use App\Models\NilaiHarian;
@@ -19,25 +20,33 @@ class Index extends Component
     use WithPagination;
 
     public $activeTab = 'mapel';
+
     public $filter_kelas = '';
 
     // State for Nilai Mapel
     public $mapel_siswa_id = '';
+
     public $mapel_id = '';
+
     public $nilai = 0;
+
     public $mapel_edit_id = null;
+
     public $showMapelModal = false;
 
-    // State for Nilai Harian
+    // State for Nilai Harian (Dynamic Global)
     public $harian_siswa_id = '';
-    public $pengetahuan = 0;
-    public $keterampilan = 0;
-    public $sikap = 0;
-    public $harian_edit_id = null;
+
+    public $harian_scores = []; // [kategori_id => nilai]
+
+    public $available_categories = [];
+
     public $showHarianModal = false;
 
     public $showDetailModal = false;
+
     public $detailSiswaId = null;
+
     public $detailSiswa = null;
 
     public function showDetail($id)
@@ -63,10 +72,11 @@ class Index extends Component
             'nilai' => 'required|numeric|min:0|max:100',
         ]);
 
-        if (!$this->mapel_edit_id) {
+        if (! $this->mapel_edit_id) {
             $exists = NilaiMapel::where('siswa_id', $this->mapel_siswa_id)->where('mapel_id', $this->mapel_id)->exists();
             if ($exists) {
                 $this->addError('mapel_id', 'Nilai untuk mata pelajaran ini sudah ada.');
+
                 return;
             }
         }
@@ -105,68 +115,82 @@ class Index extends Component
     public function createMapel()
     {
         $this->reset(['mapel_siswa_id', 'mapel_id', 'nilai', 'mapel_edit_id']);
-        
-        // If opened from detail modal, pre-fill siswa
+
         if ($this->showDetailModal && $this->detailSiswaId) {
             $this->mapel_siswa_id = $this->detailSiswaId;
         }
-        
+
         $this->showMapelModal = true;
     }
 
     // Nilai Harian Methods
-    public function saveHarian()
+    public function updatedHarianSiswaId($siswaId)
     {
-        $this->validate([
-            'harian_siswa_id' => 'required|exists:siswas,id',
-            'pengetahuan' => 'required|numeric|min:0|max:100',
-            'keterampilan' => 'required|numeric|min:0|max:100',
-            'sikap' => 'required|numeric|min:0|max:100',
-        ]);
+        $this->loadHarianCategoriesForSiswa($siswaId);
+    }
 
-        if (!$this->harian_edit_id) {
-            $exists = NilaiHarian::where('siswa_id', $this->harian_siswa_id)->exists();
-            if ($exists) {
-                $this->addError('harian_siswa_id', 'Nilai harian untuk siswa ini sudah ada.');
-                return;
-            }
+    public function loadHarianCategoriesForSiswa($siswaId)
+    {
+        $this->harian_scores = [];
+        $this->available_categories = KategoriNilaiHarian::all();
+
+        if (! $siswaId) {
+            return;
         }
 
-        NilaiHarian::updateOrCreate(
-            ['id' => $this->harian_edit_id],
-            [
-                'siswa_id' => $this->harian_siswa_id,
-                'pengetahuan' => $this->pengetahuan,
-                'keterampilan' => $this->keterampilan,
-                'sikap' => $this->sikap,
-            ]
-        );
+        $existingScores = NilaiHarian::where('siswa_id', $siswaId)->pluck('nilai', 'kategori_nilai_harian_id')->toArray();
 
-        $this->reset(['harian_siswa_id', 'pengetahuan', 'keterampilan', 'sikap', 'harian_edit_id', 'showHarianModal']);
-        session()->flash('message', 'Data Nilai Harian berhasil disimpan.');
-    }
-
-    public function editHarian($id)
-    {
-        $n = NilaiHarian::findOrFail($id);
-        $this->harian_edit_id = $n->id;
-        $this->harian_siswa_id = $n->siswa_id;
-        $this->pengetahuan = $n->pengetahuan;
-        $this->keterampilan = $n->keterampilan;
-        $this->sikap = $n->sikap;
-        $this->showHarianModal = true;
-    }
-
-    public function deleteHarian($id)
-    {
-        NilaiHarian::findOrFail($id)->delete();
-        session()->flash('message', 'Data Nilai Harian berhasil dihapus.');
+        foreach ($this->available_categories as $cat) {
+            $this->harian_scores[$cat->id] = $existingScores[$cat->id] ?? 0;
+        }
     }
 
     public function createHarian()
     {
-        $this->reset(['harian_siswa_id', 'pengetahuan', 'keterampilan', 'sikap', 'harian_edit_id']);
+        $this->reset(['harian_siswa_id', 'harian_scores']);
+        $this->available_categories = KategoriNilaiHarian::all();
         $this->showHarianModal = true;
+    }
+
+    public function editHarianForSiswa($siswaId)
+    {
+        $this->harian_siswa_id = $siswaId;
+        $this->loadHarianCategoriesForSiswa($siswaId);
+        $this->showHarianModal = true;
+    }
+
+    public function saveHarian()
+    {
+        $this->validate([
+            'harian_siswa_id' => 'required|exists:siswas,id',
+            'harian_scores' => 'required|array',
+            'harian_scores.*' => 'required|numeric|min:0|max:100',
+        ], [
+            'harian_siswa_id.required' => 'Pilih siswa terlebih dahulu.',
+            'harian_scores.*.required' => 'Setiap nilai kategori harian wajib diisi.',
+            'harian_scores.*.numeric' => 'Nilai harian harus berupa angka.',
+        ]);
+
+        foreach ($this->harian_scores as $kategoriId => $nilaiVal) {
+            NilaiHarian::updateOrCreate(
+                [
+                    'siswa_id' => $this->harian_siswa_id,
+                    'kategori_nilai_harian_id' => $kategoriId,
+                ],
+                [
+                    'nilai' => $nilaiVal,
+                ]
+            );
+        }
+
+        $this->reset(['harian_siswa_id', 'harian_scores', 'available_categories', 'showHarianModal']);
+        session()->flash('message', 'Data Nilai Harian berhasil disimpan.');
+    }
+
+    public function deleteHarianForSiswa($siswaId)
+    {
+        NilaiHarian::where('siswa_id', $siswaId)->delete();
+        session()->flash('message', 'Data Nilai Harian siswa berhasil dihapus.');
     }
 
     public function render()
@@ -177,21 +201,20 @@ class Index extends Component
             ->withSum('nilaiMapels', 'nilai')
             ->withAvg('nilaiMapels', 'nilai');
 
-        $qHarian = NilaiHarian::with('siswa.kelas');
-        
+        $qHarianSiswa = Siswa::with(['kelas', 'nilaiHarians.kategoriNilaiHarian'])
+            ->has('nilaiHarians');
+
         if ($this->filter_kelas) {
             $qMapelSiswa->where('kelas_id', $this->filter_kelas);
-            $qHarian->whereHas('siswa', function($q) {
-                $q->where('kelas_id', $this->filter_kelas);
-            });
+            $qHarianSiswa->where('kelas_id', $this->filter_kelas);
         }
 
         return view('livewire.nilai.index', [
             'mapelSiswas' => $qMapelSiswa->paginate(10, ['*'], 'mapelPage'),
-            'nilaiHarians' => $qHarian->paginate(10, ['*'], 'harianPage'),
+            'harianSiswas' => $qHarianSiswa->paginate(10, ['*'], 'harianPage'),
             'kelases' => Kelas::all(),
             'mapels' => MataPelajaran::all(),
-            'siswas' => Siswa::when($this->filter_kelas, function($q) {
+            'siswas' => Siswa::when($this->filter_kelas, function ($q) {
                 $q->where('kelas_id', $this->filter_kelas);
             })->get(),
         ]);

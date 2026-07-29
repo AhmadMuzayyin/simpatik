@@ -6,9 +6,6 @@
         </div>
         <div class="flex gap-2">
             <flux:button wire:click="create" variant="primary" icon="plus">Tambah Kelas</flux:button>
-            <flux:modal.trigger name="importModal">
-                <flux:button variant="filled" icon="arrow-down-tray">Import Excel</flux:button>
-            </flux:modal.trigger>
         </div>
     </div>
 
@@ -25,7 +22,7 @@
         <flux:table.rows>
             @foreach($kelases as $kelas)
                 <flux:table.row>
-                    <flux:table.cell>{{ $kelas->nama_kelas }}</flux:table.cell>
+                    <flux:table.cell class="font-semibold text-zinc-900 dark:text-white">{{ $kelas->nama_kelas }}</flux:table.cell>
                     <flux:table.cell>
                         <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $kelas->id }})">Edit</flux:button>
                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="delete({{ $kelas->id }})" class="text-red-500 hover:text-red-700">Hapus</flux:button>
@@ -51,26 +48,6 @@
                     <flux:spacer />
                     <flux:button wire:click="$set('showModal', false)">Batal</flux:button>
                     <flux:button type="submit" variant="primary">Simpan</flux:button>
-                </div>
-            </div>
-        </form>
-    </flux:modal>
-
-    <!-- Modal Import Excel -->
-    <flux:modal name="importModal" class="max-w-md">
-        <form>
-            <div class="space-y-4">
-                <flux:heading size="lg">Import Excel</flux:heading>
-                <flux:subheading>Pastikan format file Excel sesuai dengan template (Kolom A: Nama Kelas).</flux:subheading>
-                
-                <flux:input type="file" label="File Excel" />
-                
-                <div class="flex gap-2">
-                    <flux:spacer />
-                    <flux:modal.close>
-                        <flux:button>Batal</flux:button>
-                    </flux:modal.close>
-                    <flux:button type="submit" variant="primary">Import</flux:button>
                 </div>
             </div>
         </form>

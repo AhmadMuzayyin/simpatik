@@ -7,9 +7,7 @@
         <div class="flex gap-2">
             <flux:button wire:click="create" variant="primary" icon="plus">Tambah Siswa</flux:button>
             <flux:button wire:click="$set('showExportModal', true)" variant="filled" icon="arrow-down-tray">Download Template</flux:button>
-            <flux:modal.trigger name="importModal">
-                <flux:button variant="filled" icon="arrow-up-tray">Import Excel</flux:button>
-            </flux:modal.trigger>
+            <flux:button wire:click="$set('showImportModal', true)" variant="filled" icon="arrow-up-tray">Import Excel</flux:button>
         </div>
     </div>
 
@@ -30,8 +28,8 @@
             @foreach($siswas as $siswa)
                 <flux:table.row>
                     <flux:table.cell>{{ $siswa->nis }}</flux:table.cell>
-                    <flux:table.cell>{{ $siswa->nama_siswa }}</flux:table.cell>
-                    <flux:table.cell>{{ $siswa->kelas->nama_kelas }}</flux:table.cell>
+                    <flux:table.cell class="font-semibold text-zinc-900 dark:text-white">{{ $siswa->nama_siswa }}</flux:table.cell>
+                    <flux:table.cell>{{ optional($siswa->kelas)->nama_kelas }}</flux:table.cell>
                     <flux:table.cell>{{ $siswa->tempat_lahir }}, {{ $siswa->tanggal_lahir }}</flux:table.cell>
                     <flux:table.cell>
                         <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="edit({{ $siswa->id }})">Edit</flux:button>
@@ -53,7 +51,7 @@
                 <flux:heading size="lg">{{ $edit_id ? 'Edit' : 'Tambah' }} Siswa</flux:heading>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <flux:input wire:model="nis" label="NIS" placeholder="Nomor Induk Siswa" />
+                    <flux:input wire:model="nis" label="NIS (Hanya Angka)" placeholder="Nomor Induk Siswa" type="text" inputmode="numeric" pattern="[0-9]*" />
                     <flux:select wire:model="kelas_id" label="Kelas" placeholder="Pilih Kelas">
                         @foreach($kelases as $kelas)
                             <flux:select.option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</flux:select.option>
@@ -78,20 +76,18 @@
     </flux:modal>
 
     <!-- Modal Import Excel -->
-    <flux:modal name="importModal" class="max-w-md">
-        <form>
+    <flux:modal wire:model="showImportModal" class="max-w-md">
+        <form wire:submit.prevent="importExcel">
             <div class="space-y-4">
-                <flux:heading size="lg">Import Excel</flux:heading>
-                <flux:subheading>Pastikan kolom sesuai dengan template yang didownload.</flux:subheading>
+                <flux:heading size="lg">Import Excel Siswa</flux:heading>
+                <flux:subheading>Pastikan format kolom sesuai dengan template (NIS Wajib Angka).</flux:subheading>
                 
-                <flux:input type="file" label="File Excel" />
+                <flux:input type="file" wire:model="excel_file" label="File Excel (.xlsx, .xls, .csv)" accept=".xlsx,.xls,.csv" />
                 
                 <div class="flex gap-2">
                     <flux:spacer />
-                    <flux:modal.close>
-                        <flux:button>Batal</flux:button>
-                    </flux:modal.close>
-                    <flux:button type="submit" variant="primary">Import</flux:button>
+                    <flux:button wire:click="$set('showImportModal', false)">Batal</flux:button>
+                    <flux:button type="submit" variant="primary">Import Sekarang</flux:button>
                 </div>
             </div>
         </form>

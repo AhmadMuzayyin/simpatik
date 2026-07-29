@@ -18,41 +18,49 @@ class Index extends Component
     {
         $firstKelas = Kelas::first();
         if ($firstKelas) {
-            $this->activeTab = 'kelas_' . $firstKelas->id;
+            $this->activeTab = 'kelas_'.$firstKelas->id;
         }
     }
 
     public function render()
     {
         $kelases = Kelas::all();
-        
-        $prediksis = Prediksi::with(['siswa.kelas', 'siswa.preprocessing'])
-                    ->orderBy('ranking', 'asc')
-                    ->get();
-        
-        $globalTauladan = Prediksi::with(['siswa.kelas', 'siswa.preprocessing'])
-                            ->orderBy('skor_probabilitas', 'desc')
-                            ->first();
-        
-        // Group by kelas
+
+        // 1. Siswa Tauladan Utama Sekolah (Skor Naive Bayes Pertama #1)
+        $tauladanUtama = Prediksi::with(['siswa.kelas', 'siswa.preprocessing'])
+            ->where('hasil_prediksi', 'Tauladan')
+            ->first();
+
+        // 2. Ranking 1, 2, 3 Tingkat Sekolah (Siswa di bawah Tauladan)
+        $top3Sekolah = Prediksi::with(['siswa.kelas', 'siswa.preprocessing'])
+            ->where('hasil_prediksi', 'Bukan Tauladan')
+            ->whereIn('ranking', [1, 2, 3])
+            ->orderBy('ranking', 'asc')
+            ->get();
+
+        // 3. Rekap Data Ranking per Kelas (Siswa Tauladan tidak merangkap Rank 1 di kelasnya)
         $dataPerKelas = [];
         foreach ($kelases as $kelas) {
-            $prediksiKelas = $prediksis->filter(function($p) use ($kelas) {
-                return optional($p->siswa)->kelas_id == $kelas->id;
-            });
-            
-            $top10 = $prediksiKelas->take(10);
-            
+            $topRankingsKelas = Prediksi::with(['siswa.kelas', 'siswa.preprocessing'])
+                ->whereHas('siswa', function ($q) use ($kelas) {
+                    $q->where('kelas_id', $kelas->id);
+                })
+                ->where('hasil_prediksi', 'Bukan Tauladan') // Exclude Siswa Tauladan
+                ->orderBy('skor_probabilitas', 'desc')
+                ->take(10)
+                ->get();
+
             $dataPerKelas[$kelas->id] = [
                 'kelas' => $kelas,
-                'top10' => $top10,
+                'topRankings' => $topRankingsKelas,
             ];
         }
 
         return view('livewire.laporan.index', [
             'kelases' => $kelases,
+            'tauladanUtama' => $tauladanUtama,
+            'top3Sekolah' => $top3Sekolah,
             'dataPerKelas' => $dataPerKelas,
-            'globalTauladan' => $globalTauladan,
         ]);
     }
 }

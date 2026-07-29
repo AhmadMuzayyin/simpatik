@@ -9,13 +9,20 @@ class Preprocessing extends Model
     protected $fillable = [
         'siswa_id',
         'rata_rata_mapel',
+        'rata_rata_harian',
         'rata_rata_pengetahuan',
         'rata_rata_keterampilan',
         'rata_rata_sikap',
         'kategori_mapel',
+        'kategori_harian',
         'kategori_pengetahuan',
         'kategori_keterampilan',
         'kategori_sikap',
+        'detail_harian',
+    ];
+
+    protected $casts = [
+        'detail_harian' => 'array',
     ];
 
     public function siswa()

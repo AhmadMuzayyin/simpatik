@@ -2,23 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class NilaiHarian extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'siswa_id',
-        'pengetahuan',
-        'keterampilan',
-        'sikap',
+        'kategori_nilai_harian_id',
+        'nilai',
     ];
 
-    public function siswa(): BelongsTo
+    public function siswa()
     {
         return $this->belongsTo(Siswa::class);
+    }
+
+    public function kategoriNilaiHarian()
+    {
+        return $this->belongsTo(KategoriNilaiHarian::class, 'kategori_nilai_harian_id');
     }
 }

@@ -18,7 +18,7 @@ class SiswaExport implements FromCollection, WithHeadings
     public function collection()
     {
         $siswas = Siswa::where('kelas_id', $this->kelas_id)->get(['kelas_id', 'nis', 'nama_siswa', 'tempat_lahir', 'tanggal_lahir']);
-        
+
         // If there are no students, we just return an empty collection
         if ($siswas->isEmpty()) {
             // Provide at least one empty row with the class_id filled for convenience
@@ -29,7 +29,7 @@ class SiswaExport implements FromCollection, WithHeadings
                     'nama_siswa' => '',
                     'tempat_lahir' => '',
                     'tanggal_lahir' => '',
-                ]
+                ],
             ]);
         }
 

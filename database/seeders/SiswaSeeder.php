@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Kelas;
 use App\Models\Siswa;
-use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use Illuminate\Database\Seeder;
 
 class SiswaSeeder extends Seeder
 {
@@ -14,7 +14,9 @@ class SiswaSeeder extends Seeder
         $faker = Faker::create('id_ID');
         $kelases = Kelas::all();
 
-        if ($kelases->isEmpty()) return;
+        if ($kelases->isEmpty()) {
+            return;
+        }
 
         foreach ($kelases as $kelas) {
             for ($i = 1; $i <= 5; $i++) {

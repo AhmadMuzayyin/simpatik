@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('nilai_harians', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('siswa_id')->unique()->constrained('siswas')->cascadeOnDelete();
-            $table->float('pengetahuan')->default(0);
-            $table->float('keterampilan')->default(0);
-            $table->float('sikap')->default(0);
+            $table->foreignId('siswa_id')->constrained('siswas')->cascadeOnDelete();
+            $table->foreignId('kategori_nilai_harian_id')->constrained('kategori_nilai_harians')->cascadeOnDelete();
+            $table->float('nilai')->default(0);
             $table->timestamps();
+
+            $table->unique(['siswa_id', 'kategori_nilai_harian_id']);
         });
     }
 

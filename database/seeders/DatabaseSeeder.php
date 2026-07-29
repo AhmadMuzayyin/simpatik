@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             KelasSeeder::class,
             MataPelajaranSeeder::class,
+            KategoriNilaiHarianSeeder::class,
             SiswaSeeder::class,
             NilaiSeeder::class,
         ]);

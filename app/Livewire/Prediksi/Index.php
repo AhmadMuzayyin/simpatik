@@ -22,117 +22,110 @@ class Index extends Component
 
         if ($unpredicted->isEmpty()) {
             session()->flash('message', 'Tidak ada data baru untuk diprediksi.');
+
             return;
         }
 
         // 2. Ambil data latih (Data Prediksi yang sudah ada)
-        // Jika kosong, kita bootstrap data latih dengan rule sederhana
         $trainingData = Prediksi::join('preprocessings', 'prediksis.siswa_id', '=', 'preprocessings.siswa_id')->get();
-        
+
         $countTauladan = $trainingData->where('hasil_prediksi', 'Tauladan')->count();
-        $countBukan = $trainingData->where('hasil_prediksi', 'Bukan Tauladan')->count();
         $totalData = $trainingData->count();
 
-        // Fallback jika tidak ada data latih historis (Cold Start)
         if ($totalData == 0) {
             $priorTauladan = 0.5;
             $priorBukan = 0.5;
         } else {
             $priorTauladan = $countTauladan / $totalData;
-            $priorBukan = $countBukan / $totalData;
+            $priorBukan = ($totalData - $countTauladan) / $totalData;
         }
 
         $predictedCount = 0;
 
         foreach ($unpredicted as $data) {
-            // Hitung Likelihood
-            // P(X | Tauladan)
+            // Hitung Likelihood Mapel & Harian Gabungan
             $pMapelT = $this->calculateLikelihood($trainingData, 'Tauladan', 'kategori_mapel', $data->kategori_mapel);
-            $pPengetahuanT = $this->calculateLikelihood($trainingData, 'Tauladan', 'kategori_pengetahuan', $data->kategori_pengetahuan);
-            $pKeterampilanT = $this->calculateLikelihood($trainingData, 'Tauladan', 'kategori_keterampilan', $data->kategori_keterampilan);
-            $pSikapT = $this->calculateLikelihood($trainingData, 'Tauladan', 'kategori_sikap', $data->kategori_sikap);
+            $pHarianT = $this->calculateLikelihood($trainingData, 'Tauladan', 'kategori_harian', $data->kategori_harian);
 
-            $probTauladan = $priorTauladan * $pMapelT * $pPengetahuanT * $pKeterampilanT * $pSikapT;
-
-            // P(X | Bukan Tauladan)
             $pMapelB = $this->calculateLikelihood($trainingData, 'Bukan Tauladan', 'kategori_mapel', $data->kategori_mapel);
-            $pPengetahuanB = $this->calculateLikelihood($trainingData, 'Bukan Tauladan', 'kategori_pengetahuan', $data->kategori_pengetahuan);
-            $pKeterampilanB = $this->calculateLikelihood($trainingData, 'Bukan Tauladan', 'kategori_keterampilan', $data->kategori_keterampilan);
-            $pSikapB = $this->calculateLikelihood($trainingData, 'Bukan Tauladan', 'kategori_sikap', $data->kategori_sikap);
+            $pHarianB = $this->calculateLikelihood($trainingData, 'Bukan Tauladan', 'kategori_harian', $data->kategori_harian);
 
-            $probBukan = $priorBukan * $pMapelB * $pPengetahuanB * $pKeterampilanB * $pSikapB;
+            $probTauladan = $priorTauladan * $pMapelT * $pHarianT;
+            $probBukan = $priorBukan * $pMapelB * $pHarianB;
 
-            // Cold start fallback rules jika probabilitas 0 karena data latih belum representatif
+            // Fallback score calculation jika cold start
             if ($totalData == 0 || ($probTauladan == 0 && $probBukan == 0)) {
-                $avgAll = ($data->rata_rata_mapel + $data->rata_rata_pengetahuan + $data->rata_rata_keterampilan + $data->rata_rata_sikap) / 4;
-                if ($avgAll >= 85) {
-                    $probTauladan = $avgAll / 100;
-                    $probBukan = 1 - $probTauladan;
-                } else {
-                    $probBukan = (100 - $avgAll) / 100;
-                    $probTauladan = 1 - $probBukan;
-                }
-            }
-
-            // Normalisasi
-            $totalProb = $probTauladan + $probBukan;
-            if ($totalProb > 0) {
-                $scoreTauladan = $probTauladan / $totalProb;
+                $avgAll = ($data->rata_rata_mapel + $data->rata_rata_harian) / 2;
+                $scoreTauladan = $avgAll / 100;
             } else {
-                $scoreTauladan = 0;
+                $totalProb = $probTauladan + $probBukan;
+                $scoreTauladan = $totalProb > 0 ? ($probTauladan / $totalProb) : 0;
             }
-
-            $hasil = $probTauladan > $probBukan ? 'Tauladan' : 'Bukan Tauladan';
 
             Prediksi::create([
                 'siswa_id' => $data->siswa_id,
-                'hasil_prediksi' => $hasil,
+                'hasil_prediksi' => 'Bukan Tauladan',
                 'skor_probabilitas' => $scoreTauladan,
             ]);
 
             $predictedCount++;
         }
 
-        // Kalkulasi ulang ranking per kelas berdasarkan skor_probabilitas
-        $this->updateRanking();
+        // Penetapan 1 Tauladan Utama Sekolah dan Ranking (Siswa Tauladan tidak merangkap Ranking 1)
+        $this->updateRankingAndTauladan();
 
-        session()->flash('message', "Berhasil memprediksi $predictedCount siswa.");
+        session()->flash('message', "Berhasil memprediksi $predictedCount siswa. 1 Siswa Tauladan & Ranking telah diperbarui!");
     }
 
     private function calculateLikelihood($trainingData, $kelasLabel, $atribut, $nilaiAtribut)
     {
-        if ($trainingData->count() == 0) return 0.5; // Laplace smoothing fallback
-        
+        if ($trainingData->count() == 0) {
+            return 0.5;
+        } // Laplace smoothing fallback
+
         $subset = $trainingData->where('hasil_prediksi', $kelasLabel);
         $totalSubset = $subset->count();
-        
-        if ($totalSubset == 0) return 0.01; // Avoid divide by zero
-        
+
+        if ($totalSubset == 0) {
+            return 0.01;
+        } // Avoid divide by zero
+
         $countMatch = $subset->where($atribut, $nilaiAtribut)->count();
-        
+
         // Laplace Smoothing (Add-1)
-        return ($countMatch + 1) / ($totalSubset + 3); // Asumsi 3 kategori: Tinggi, Sedang, Rendah
+        return ($countMatch + 1) / ($totalSubset + 3); // 3 Kategori: Tinggi, Sedang, Rendah
     }
 
-    private function updateRanking()
+    public function updateRankingAndTauladan()
     {
-        $prediksis = Prediksi::with('siswa')->get();
-        $groupedByKelas = $prediksis->groupBy('siswa.kelas_id');
+        $prediksis = Prediksi::with('siswa.kelas')->get();
 
-        foreach ($groupedByKelas as $kelasId => $siswaPrediksi) {
-            $sorted = $siswaPrediksi->sortByDesc('skor_probabilitas')->values();
-            foreach ($sorted as $index => $pred) {
-                $pred->update(['ranking' => $index + 1]);
+        // Urutkan seluruh siswa dari skor_probabilitas tertinggi ke terendah
+        $sorted = $prediksis->sortByDesc('skor_probabilitas')->values();
+
+        foreach ($sorted as $index => $pred) {
+            if ($index === 0) {
+                // Siswa Tertinggi #1 = SISWA TAULADAN UTAMA
+                $pred->update([
+                    'hasil_prediksi' => 'Tauladan',
+                    'ranking' => 0, // 0 menandakan Tauladan Utama (tidak merangkap Rank 1)
+                ]);
+            } else {
+                // Siswa berikutnya (#2 -> Rank 1, #3 -> Rank 2, #4 -> Rank 3, dst)
+                $pred->update([
+                    'hasil_prediksi' => 'Bukan Tauladan',
+                    'ranking' => $index, // index 1 = Rank 1, index 2 = Rank 2, dst
+                ]);
             }
         }
     }
 
     public function render()
     {
+        $query = Prediksi::with('siswa.kelas', 'siswa.preprocessing');
+
         return view('livewire.prediksi.index', [
-            'data' => Prediksi::with('siswa.kelas', 'siswa.preprocessing')
-                        ->orderBy('skor_probabilitas', 'desc')
-                        ->paginate(10)
+            'prediksiList' => $query->orderBy('skor_probabilitas', 'desc')->paginate(10),
         ]);
     }
 }

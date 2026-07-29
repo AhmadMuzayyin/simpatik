@@ -15,13 +15,15 @@ class Index extends Component
     use WithPagination;
 
     public $nama_kelas = '';
+
     public $edit_id = null;
+
     public $showModal = false;
 
     public function rules()
     {
         return [
-            'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas,' . $this->edit_id,
+            'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas,'.$this->edit_id,
         ];
     }
 
@@ -31,7 +33,9 @@ class Index extends Component
 
         Kelas::updateOrCreate(
             ['id' => $this->edit_id],
-            ['nama_kelas' => $this->nama_kelas]
+            [
+                'nama_kelas' => $this->nama_kelas,
+            ]
         );
 
         $this->reset(['nama_kelas', 'edit_id', 'showModal']);
@@ -61,7 +65,7 @@ class Index extends Component
     public function render()
     {
         return view('livewire.kelas.index', [
-            'kelases' => Kelas::paginate(10)
+            'kelases' => Kelas::paginate(10),
         ]);
     }
 }

@@ -15,13 +15,15 @@ class Index extends Component
     use WithPagination;
 
     public $nama_mapel = '';
+
     public $edit_id = null;
+
     public $showModal = false;
 
     public function rules()
     {
         return [
-            'nama_mapel' => 'required|string|max:255|unique:mata_pelajarans,nama_mapel,' . $this->edit_id,
+            'nama_mapel' => 'required|string|max:255|unique:mata_pelajarans,nama_mapel,'.$this->edit_id,
         ];
     }
 
@@ -61,7 +63,7 @@ class Index extends Component
     public function render()
     {
         return view('livewire.mapel.index', [
-            'mapels' => MataPelajaran::paginate(10)
+            'mapels' => MataPelajaran::paginate(10),
         ]);
     }
 }

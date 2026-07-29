@@ -15,13 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('siswa_id')->constrained('siswas')->cascadeOnDelete();
             $table->double('rata_rata_mapel')->default(0);
+            $table->double('rata_rata_harian')->default(0);
             $table->double('rata_rata_pengetahuan')->default(0);
             $table->double('rata_rata_keterampilan')->default(0);
             $table->double('rata_rata_sikap')->default(0);
             $table->string('kategori_mapel')->nullable();
+            $table->string('kategori_harian')->nullable();
             $table->string('kategori_pengetahuan')->nullable();
             $table->string('kategori_keterampilan')->nullable();
             $table->string('kategori_sikap')->nullable();
+            $table->json('detail_harian')->nullable();
             $table->timestamps();
         });
     }
