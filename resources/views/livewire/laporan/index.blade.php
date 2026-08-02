@@ -112,13 +112,13 @@
                                     <flux:table.row class="{{ $rankK == 1 ? 'bg-sky-50/40 dark:bg-sky-950/20 font-medium' : '' }}">
                                         <flux:table.cell>
                                             @if($rankK == 1)
-                                                <flux:badge size="sm" variant="solid" class="bg-sky-600 text-white font-bold">🥇 Rank #1</flux:badge>
+                                                <flux:badge size="sm" variant="solid" class="bg-sky-600 text-white font-bold">🥇 Rank 1</flux:badge>
                                             @elseif($rankK == 2)
-                                                <flux:badge size="sm" variant="solid" class="bg-indigo-600 text-white font-bold">🥈 Rank #2</flux:badge>
+                                                <flux:badge size="sm" variant="solid" class="bg-indigo-600 text-white font-bold">🥈 Rank 2</flux:badge>
                                             @elseif($rankK == 3)
-                                                <flux:badge size="sm" variant="solid" class="bg-slate-600 text-white font-bold">🥉 Rank #3</flux:badge>
+                                                <flux:badge size="sm" variant="solid" class="bg-slate-600 text-white font-bold">🥉 Rank 3</flux:badge>
                                             @else
-                                                <flux:badge size="sm" variant="subtle">#{{ $rankK }}</flux:badge>
+                                                <flux:badge size="sm" variant="subtle">{{ $rankK }}</flux:badge>
                                             @endif
                                         </flux:table.cell>
                                         <flux:table.cell>{{ optional($row->siswa)->nis }}</flux:table.cell>

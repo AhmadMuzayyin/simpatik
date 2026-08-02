@@ -22,6 +22,8 @@ class Index extends Component
 
     public $kelas_id = '';
 
+    public $filter_kelas = '';
+
     public $nama_siswa = '';
 
     public $nis = '';
@@ -142,7 +144,11 @@ class Index extends Component
     public function render()
     {
         return view('livewire.siswa.index', [
-            'siswas' => Siswa::with('kelas')->paginate(10),
+            'siswas' => Siswa::with('kelas')
+                ->when($this->filter_kelas, function($q) {
+                    $q->where('kelas_id', $this->filter_kelas);
+                })
+                ->paginate(10),
             'kelases' => Kelas::all(),
         ]);
     }

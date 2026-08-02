@@ -44,13 +44,13 @@
                         @if($row->hasil_prediksi == 'Tauladan')
                             <flux:badge size="sm" variant="success" class="bg-sky-600 text-white font-bold">🏆 Siswa Tauladan</flux:badge>
                         @elseif($row->ranking == 1)
-                            <flux:badge size="sm" variant="solid" class="bg-sky-600 text-white font-bold">🥇 Rank #1</flux:badge>
+                            <flux:badge size="sm" variant="solid" class="bg-sky-600 text-white font-bold">🥇 Rank 1</flux:badge>
                         @elseif($row->ranking == 2)
-                            <flux:badge size="sm" variant="solid" class="bg-indigo-600 text-white font-bold">🥈 Rank #2</flux:badge>
+                            <flux:badge size="sm" variant="solid" class="bg-indigo-600 text-white font-bold">🥈 Rank 2</flux:badge>
                         @elseif($row->ranking == 3)
-                            <flux:badge size="sm" variant="solid" class="bg-slate-600 text-white font-bold">🥉 Rank #3</flux:badge>
+                            <flux:badge size="sm" variant="solid" class="bg-slate-600 text-white font-bold">🥉 Rank 3</flux:badge>
                         @else
-                            <flux:badge size="sm" variant="subtle">#{{ $row->ranking }}</flux:badge>
+                            <flux:badge size="sm" variant="subtle">{{ $row->ranking }}</flux:badge>
                         @endif
                     </flux:table.cell>
                 </flux:table.row>

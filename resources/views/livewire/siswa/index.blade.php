@@ -15,6 +15,15 @@
         <flux:toast variant="success" text="{{ session('message') }}" />
     @endif
 
+    <div class="mb-4 flex gap-4 max-w-sm">
+        <flux:select wire:model.live="filter_kelas" placeholder="Semua Kelas">
+            <flux:select.option value="">Semua Kelas</flux:select.option>
+            @foreach($kelases as $kelas)
+                <flux:select.option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</flux:select.option>
+            @endforeach
+        </flux:select>
+    </div>
+
     <flux:table>
         <flux:table.columns>
             <flux:table.column>NIS</flux:table.column>
@@ -48,22 +57,39 @@
     <flux:modal wire:model="showModal" class="max-w-xl">
         <form wire:submit.prevent="save">
             <div class="space-y-4">
-                <flux:heading size="lg">{{ $edit_id ? 'Edit' : 'Tambah' }} Siswa</flux:heading>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <flux:input wire:model="nis" label="NIS (Hanya Angka)" placeholder="Nomor Induk Siswa" type="text" inputmode="numeric" pattern="[0-9]*" />
-                    <flux:select wire:model="kelas_id" label="Kelas" placeholder="Pilih Kelas">
-                        @foreach($kelases as $kelas)
-                            <flux:select.option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
+                <div>
+                    <flux:heading size="lg">{{ $edit_id ? 'Edit' : 'Tambah' }} Siswa</flux:heading>
                 </div>
                 
-                <flux:input wire:model="nama_siswa" label="Nama Siswa" placeholder="Nama Lengkap" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <flux:input wire:model="nis" label="NIS (Hanya Angka)" placeholder="Nomor Induk Siswa" type="text" inputmode="numeric" pattern="[0-9]*" />
+                        <p class="text-xs italic text-red-500 mt-1">* Wajib diisi</p>
+                    </div>
+                    <div>
+                        <flux:select wire:model="kelas_id" label="Kelas" placeholder="Pilih Kelas">
+                            @foreach($kelases as $kelas)
+                                <flux:select.option value="{{ $kelas->id }}">{{ $kelas->nama_kelas }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                        <p class="text-xs italic text-red-500 mt-1">* Wajib diisi</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <flux:input wire:model="nama_siswa" label="Nama Siswa" placeholder="Nama Lengkap" />
+                    <p class="text-xs italic text-red-500 mt-1">* Wajib diisi</p>
+                </div>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <flux:input wire:model="tempat_lahir" label="Tempat Lahir" placeholder="Contoh: Jakarta" />
-                    <flux:input type="date" wire:model="tanggal_lahir" label="Tanggal Lahir" />
+                    <div>
+                        <flux:input wire:model="tempat_lahir" label="Tempat Lahir" placeholder="Contoh: Jakarta" />
+                        <p class="text-xs italic text-red-500 mt-1">* Wajib diisi</p>
+                    </div>
+                    <div>
+                        <flux:input type="date" wire:model="tanggal_lahir" label="Tanggal Lahir" />
+                        <p class="text-xs italic text-red-500 mt-1">* Wajib diisi</p>
+                    </div>
                 </div>
                 
                 <div class="flex gap-2">

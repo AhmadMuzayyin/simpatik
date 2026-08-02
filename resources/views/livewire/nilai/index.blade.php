@@ -106,20 +106,20 @@
                 <flux:heading size="lg">{{ $mapel_edit_id ? 'Edit' : 'Tambah' }} Nilai Mapel</flux:heading>
                 
                 <div class="grid grid-cols-2 gap-4">
-                    <flux:select wire:model="mapel_siswa_id" label="Siswa" placeholder="Pilih Siswa">
+                    <flux:select wire:model.live="mapel_siswa_id" label="Siswa" placeholder="Pilih Siswa">
                         @foreach($siswas as $siswa)
                             <flux:select.option value="{{ $siswa->id }}">{{ $siswa->nama_siswa }} ({{ optional($siswa->kelas)->nama_kelas }})</flux:select.option>
                         @endforeach
                     </flux:select>
                     
-                    <flux:select wire:model="mapel_id" label="Mata Pelajaran" placeholder="Pilih Mapel">
+                    <flux:select wire:model.live="mapel_id" label="Mata Pelajaran" placeholder="Pilih Mapel">
                         @foreach($mapels as $mapel)
                             <flux:select.option value="{{ $mapel->id }}">{{ $mapel->nama_mapel }}</flux:select.option>
                         @endforeach
                     </flux:select>
                 </div>
                 
-                <flux:input type="number" step="0.01" wire:model="nilai" label="Nilai" />
+                <flux:input type="number" step="0.01" wire:model="nilai" label="Nilai" :disabled="empty($mapel_siswa_id) || empty($mapel_id)" />
                 
                 <div class="flex gap-2">
                     <flux:spacer />
@@ -148,7 +148,7 @@
                         <flux:heading size="sm" class="text-zinc-700 dark:text-zinc-300">Kategori Penilaian Harian:</flux:heading>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             @foreach($available_categories as $cat)
-                                <flux:input type="number" step="0.01" wire:model="harian_scores.{{ $cat->id }}" label="{{ $cat->nama_kategori }}" placeholder="0 - 100" />
+                                <flux:input type="number" step="0.01" wire:model="harian_scores.{{ $cat->id }}" label="{{ $cat->nama_kategori }}" placeholder="0 - 100" :disabled="empty($harian_siswa_id)" />
                             @endforeach
                         </div>
                     </div>
