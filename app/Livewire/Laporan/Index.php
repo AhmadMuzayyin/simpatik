@@ -22,6 +22,13 @@ class Index extends Component
         }
     }
 
+    private function avgNilai(Prediksi $pred): float
+    {
+        $p = optional($pred->siswa)->preprocessing;
+
+        return $p ? ($p->rata_rata_mapel + $p->rata_rata_harian) / 2 : 0;
+    }
+
     public function render()
     {
         $kelases = Kelas::all();
@@ -46,9 +53,15 @@ class Index extends Component
                     $q->where('kelas_id', $kelas->id);
                 })
                 ->where('hasil_prediksi', 'Bukan Tauladan') // Exclude Siswa Tauladan
-                ->orderBy('skor_probabilitas', 'desc')
+                ->get()
+                // skor_probabilitas Naive Bayes bisa seri antar siswa (karena berbasis
+                // kategori, bukan nilai mentah). Jika seri, urutkan berdasarkan
+                // rata-rata nilai (mapel & harian) tertinggi sebagai tie-breaker.
+                ->sort(function ($a, $b) {
+                    return [$b->skor_probabilitas, $this->avgNilai($b)] <=> [$a->skor_probabilitas, $this->avgNilai($a)];
+                })
                 ->take(10)
-                ->get();
+                ->values();
 
             $dataPerKelas[$kelas->id] = [
                 'kelas' => $kelas,

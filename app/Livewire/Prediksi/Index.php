@@ -77,6 +77,13 @@ class Index extends Component
         session()->flash('message', "Berhasil memprediksi $predictedCount siswa. 1 Siswa Tauladan & Ranking telah diperbarui!");
     }
 
+    private function avgNilai(Prediksi $pred): float
+    {
+        $p = optional($pred->siswa)->preprocessing;
+
+        return $p ? ($p->rata_rata_mapel + $p->rata_rata_harian) / 2 : 0;
+    }
+
     private function calculateLikelihood($trainingData, $kelasLabel, $atribut, $nilaiAtribut)
     {
         if ($trainingData->count() == 0) {
@@ -98,10 +105,15 @@ class Index extends Component
 
     public function updateRankingAndTauladan()
     {
-        $prediksis = Prediksi::with('siswa.kelas')->get();
+        $prediksis = Prediksi::with('siswa.kelas', 'siswa.preprocessing')->get();
 
-        // Urutkan seluruh siswa dari skor_probabilitas tertinggi ke terendah
-        $sorted = $prediksis->sortByDesc('skor_probabilitas')->values();
+        // Urutkan seluruh siswa dari skor_probabilitas tertinggi ke terendah.
+        // Jika skor_probabilitas sama (kategori Naive Bayes-nya identik), pakai
+        // rata-rata nilai (mapel & harian) sebagai tie-breaker agar siswa dengan
+        // nilai lebih tinggi tidak kalah ranking oleh siswa bernilai lebih rendah.
+        $sorted = $prediksis->sort(function ($a, $b) {
+            return [$b->skor_probabilitas, $this->avgNilai($b)] <=> [$a->skor_probabilitas, $this->avgNilai($a)];
+        })->values();
 
         foreach ($sorted as $index => $pred) {
             if ($index === 0) {
@@ -125,7 +137,10 @@ class Index extends Component
         $query = Prediksi::with('siswa.kelas', 'siswa.preprocessing');
 
         return view('livewire.prediksi.index', [
-            'prediksiList' => $query->orderBy('skor_probabilitas', 'desc')->paginate(10),
+            // Urutkan berdasarkan kolom 'ranking' (sudah memperhitungkan tie-breaker
+            // rata-rata nilai di updateRankingAndTauladan), bukan skor_probabilitas
+            // mentah yang bisa seri antar siswa.
+            'prediksiList' => $query->orderBy('ranking', 'asc')->paginate(10),
         ]);
     }
 }
