@@ -23,7 +23,7 @@
             <!-- Navbar -->
             <header class="bg-transparent">
                 <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <x-app-logo />
+                    <x-app-logo class="[&>div:last-child]:!text-white" />
 
                     <nav class="flex items-center gap-2">
                         @auth
