@@ -4,7 +4,7 @@
 
 @php
     $setting = \App\Models\Setting::first();
-    $appName = $setting && $setting->app_name ? $setting->app_name : 'Laravel Starter Kit';
+    $appName = $setting && $setting->app_name ? $setting->app_name : '';
     $logoUrl = $setting && $setting->logo ? Storage::url($setting->logo) : null;
 @endphp
 
